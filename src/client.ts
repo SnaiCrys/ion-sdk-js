@@ -13,6 +13,11 @@ export interface Configuration extends RTCConfiguration {
   codec: 'vp8' | 'vp9' | 'h264';
 }
 
+export interface JoinConfig {
+  NoPublish: boolean;
+  NoSubscribe: boolean;
+}
+
 export interface Trickle {
   candidate: RTCIceCandidateInit;
   target: Role;
@@ -86,7 +91,7 @@ export default class Client {
     signal.ontrickle = this.trickle.bind(this);
   }
 
-  async join(sid: string, uid: string) {
+  async join(sid: string, uid: string, config: JoinConfig) {
     this.transports = {
       [Role.pub]: new Transport(Role.pub, this.signal, this.config),
       [Role.sub]: new Transport(Role.sub, this.signal, this.config),
@@ -119,7 +124,7 @@ export default class Client {
 
     const offer = await this.transports[Role.pub].pc.createOffer();
     await this.transports[Role.pub].pc.setLocalDescription(offer);
-    const answer = await this.signal.join(sid, uid, offer);
+    const answer = await this.signal.join(sid, uid, config, offer);
 
     await this.transports[Role.pub].pc.setRemoteDescription(answer);
     this.transports[Role.pub].candidates.forEach((c) => this.transports![Role.pub].pc.addIceCandidate(c));

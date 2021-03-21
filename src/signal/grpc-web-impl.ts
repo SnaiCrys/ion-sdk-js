@@ -5,7 +5,7 @@ import { grpc } from '@improbable-eng/grpc-web';
 import { SFUClient, Status, BidirectionalStream } from './_proto/library/sfu_pb_service';
 import { SignalRequest, SignalReply, JoinRequest, JoinReply } from './_proto/library/sfu_pb';
 import * as pb from './_proto/library/sfu_pb';
-import { Trickle } from '../client';
+import { JoinConfig, Trickle } from '../client';
 
 class IonSFUGRPCWebSignal implements Signal {
   protected client: SFUClient;
@@ -56,13 +56,17 @@ class IonSFUGRPCWebSignal implements Signal {
     // this.streaming.on('end' || 'status', (status?: Status | undefined) => {});
   }
 
-  join(sid: string, uid: string, offer: RTCSessionDescriptionInit) {
+  join(sid: string, uid: string, config: JoinConfig, offer: RTCSessionDescriptionInit) {
     const request = new SignalRequest();
     const join = new JoinRequest();
+    const configRequest = new JoinRequest.Config();
+    configRequest.setNopublish(config.NoPublish);
+    configRequest.setNosubscribe(config.NoSubscribe);
     join.setSid(sid);
     join.setUid(uid);
     const buffer = Uint8Array.from(JSON.stringify(offer), (c) => c.charCodeAt(0));
     join.setDescription(buffer);
+    join.setConfig(configRequest);
     request.setJoin(join);
     this.streaming.write(request);
 
